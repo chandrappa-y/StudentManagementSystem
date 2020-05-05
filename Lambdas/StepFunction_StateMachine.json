@@ -1,0 +1,83 @@
+{
+    "Comment":"Starting",
+    "StartAt":"Validate Input",
+    "States":{
+      "Validate Input":{
+        "Type":"Task",
+        "Resource":"arn:****",
+        "ResultPath":"$.valid",
+        "Next":"Check Valid ?"
+      },
+      "Check Valid ?":{
+        "Type":"Choice",
+        "Choices":[
+          {
+            "Variable":"$.valid",
+            "BooleanEquals":true,
+            "Next":"Create Board"
+          },
+          {
+            "Variable":"$.valid",
+            "BooleanEquals":false,
+            "Next":"Invalid Input"
+          }
+        ],
+        "Default":"Invalid Input"
+      },
+      "Create Board": {
+         "Type":"Task",
+         "Resource": "arn:****",
+         "Catch":[{
+              "ErrorEquals": ["States.TaskFailed"],
+              "Next":"Failed To Create Board"
+          }],
+         "ResultPath": "$.boardId",
+         "Next": "Create New Course"
+      },
+      "Failed To Create Board" : {
+          "Type":"Fail",
+          "Cause":"Error while creating board"
+      },
+      "Create New Course" : {
+         "Type":"Task",
+         "Resource":"arn:***",
+         "Catch":[ {
+              "ErrorEquals": ["com.student.course.CourseExist"],
+              "Next":"Failed To Create Course"
+          }, {
+              "ErrorEquals": ["States.TaskFailed"],
+              "Next":"Invalid Professor Id"
+          } ],
+         "Next":"Register Course"
+      },
+      "Failed To Create Course" : {
+          "Type":"Fail",
+          "Cause":"Could not create course as Course ID already exist"
+      },
+      "Invalid Professor Id" : {
+          "Type":"Fail",
+          "Cause":"Created Course, However could not subscribe professor for notification as Professor Id doesn't exist"
+      },
+      "Register Course" : {
+          "Type": "Task",
+          "Resource":"arn:***",
+          "Catch":[{
+                 "ErrorEquals": ["States.TaskFailed"],
+                 "Next":"Failed To Register"
+          }],
+          "ResultPath":"$.message",
+          "Next": "Successfully Created Course"
+       },
+      "Failed To Register":{
+         "Type":"Fail",
+         "Cause":"Failed to Register Course with Registrar!"
+      },
+      "Successfully Created Course":{
+        "Type":"Succeed"
+      },
+      "Invalid Input":{
+        "Type":"Fail",
+        "Cause":"Board ID or Notification Topic or List of Registered students is not null"
+      }
+    }
+  }
